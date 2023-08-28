@@ -138,11 +138,13 @@ protected:
 
   // Clusters for this event
   std::vector<SBSCalorimeterCluster*> fClusters; // Cluster
-  
+  std::vector<Double_t> ftdctw; // timewalk parameters
+
   Double_t    fTmax;            //< Maximum time difference for cluster block
   Double_t    fEmin;         //< Minimum energy for a cluster block
   Double_t fEmin_clusSeed; //< Minimum energy to be the seed of a cluster
   Double_t fEmin_clusTotal; //< Total energy threshold of a cluster
+  //Double_t    ftdctw;
 
   Double_t    fXmax_dis;         //< maximum X distance from a cluster center
   Double_t    fYmax_dis;         //< maximum Y distance from a cluster center

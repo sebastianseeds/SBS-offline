@@ -44,12 +44,13 @@ SBSCalorimeter::SBSCalorimeter( const char* name, const char* description,
   fTmax = 1000.0; // 1000 ns maximum arrival time difference with seed to be in cluster
   fEmin = 0.001; // 1 MeV minimum energy to be in cluster (Hit threshold)  
   fEmin_clusSeed = 0.001; // 1 MeV minimum energy to be the seed of a cluster
-  fEmin_clusTotal = 0.001; // Minimum total cluster energy is 1 MeV
+  fEmin_clusTotal = 0.001; // Minimum total cluster energy is 1 MeV 
   fXmax_dis = .30; // Maximum X (m) distance from cluster center to be included in cluster
   fYmax_dis = .30; // Maximum Y (m) distance from cluster center to be included in cluster
   fRmax_dis = .30; // Maximum Radius (m) from cluster center to be included in cluster
   fBestClusterIndex = -1;
-  fClusters.reserve(10);
+  fClusters.reserve(20);
+  ftdctw.reserve(2);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,6 +96,7 @@ Int_t SBSCalorimeter::ReadDatabase( const TDatime& date )
     { "tmax",         &fTmax,   kDouble, 0, false }, ///< maximum time difference for block
     { "emin_clSeed", &fEmin_clusSeed, kDouble, 0, false }, ///< minimum cluster seed energy
     { "emin_clTotal", &fEmin_clusTotal, kDouble, 0, false }, ///< minimum total cluster energy
+    { "tdc.tw",        &ftdctw,  kDoubleV, 0, true }, ///< tdc dt = P0/(E^P1) timewalk fit parameters
     { "cluster_dim",   &cluster_dim,   kIntV, 0, true }, ///< cluster dimensions (2D)
     { "nmax_cluster",   &fMaxNclus,   kInt, 0, true }, ///< maximum number of clusters to store
     { "const", &fConst, kDouble, 0, true }, ///< const from gain correction 
@@ -108,7 +110,13 @@ Int_t SBSCalorimeter::ReadDatabase( const TDatime& date )
     fclose(file);
     return err;
   }
-
+  
+  // ensure data at memory address doesn't corrupt output if no tdctw in db
+  if(ftdctw.empty()){
+    ftdctw.push_back(0.);
+    ftdctw.push_back(0.);
+  }
+    
   // Compute the max possible cluster size (which at most should be
   // cluster_dim x cluster_dim)
   if(cluster_dim.empty()) {
@@ -203,6 +211,7 @@ Int_t SBSCalorimeter::DefineVariables( EMode mode )
     { "againblk",    "ADC gain coeff. of highest energy block in the largest cluster",  "GetAgain()" },
     { "atimeblk", "ADC time of highest energy block in the largest cluster", "GetAtime()" },
     { "tdctimeblk", "TDC time of highest energy block in the largest cluster", "GetTDCtime()" },
+    //{ "tdctimeblk_tw", "TDC time of highest energy block in the largest cluster, timewalk corrected", "GetTDCtimeTW()" },
     { "eblk",   "Energy (MeV) of highest energy block in the largest cluster",    "GetEBlk()" },
     //{ "eblk_c", "Corrected Energy (MeV) of highest energy block in the largest cluster",    "GetEBlkCorrected()" },
     { "rowblk", "Row of block with highest energy in the largest cluster",    "GetRow()" },
@@ -369,6 +378,9 @@ Int_t SBSCalorimeter::FindClusters()
   Int_t NSize = fBlockSet.size();
 
   fBestClusterIndex = -1;
+
+  std::cout << "Calorimeter Name: " << GetName() << ", tdc tw pars: " << ftdctw[0] << ", " << ftdctw[1] << std::endl;
+  //std::cout << "Calorimeter Name: " << GetName() << ", tdc tw par: " << ftdctw << std::endl;
 
   double Emax = 0.0;
   //We want the "best" cluster to be the one with the largest total energy (in general)
