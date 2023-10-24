@@ -395,8 +395,6 @@ Int_t SBSCalorimeter::FindClusters()
 
   Int_t NSize = fBlockSet.size();
 
-  Int_t NGBSize = fGoodBlocks.id.size();
-
   fBestClusterIndex = -1;
 
   double Emax = 0.0;
@@ -437,28 +435,20 @@ Int_t SBSCalorimeter::FindClusters()
 	  Double_t Rad = sqrt( pow((Clus_px-blkx),2) + pow((Clus_py-blky),2) );
 	  Double_t tDiff = blk->GetAtime()-Clus_ptime;
 
-	  //set up vector to add cluster id to goodblocks
-	  std::vector<Int_t> goodblock_ids = {Clus_pblkid};
-
 	  //Check each additional block in blockset to see if it can be added to current cluster or pass to next
 	  Close =( Rad<fRmax_dis && fabs(tDiff)<fTmax );
 	  if (Close) {
 
 	    fClusters[Index]->AddElement(blk);
-	    goodblock_ids.push_back(blk_ID);
+	    //If a block is to be added to the cluster, check goodblocks for a match and set cid
+	    for( size_t gb=0; gb<fGoodBlocks.id.size(); ++gb )
+	      if( (fGoodBlocks.id[gb]==blk_ID && fGoodBlocks.cid[gb]==-1) ||
+	    	  (fGoodBlocks.id[gb]==Clus_pblkid && fGoodBlocks.cid[gb]==-1) )
+	    	fGoodBlocks.cid[gb]=Index;
+
 	  } else {	
        
 	    ++it2;
-	  }
-
-	  //Add all relevant cluster ids to goodblocks. With simple assignments and similar order iterations,
-	  //using nested loops for clarity and negligible impact to processing time
-	  for( Int_t i=0; i<NGBSize; ++i ){
-	    for( size_t j=0; j<goodblock_ids.size(); ++j ){
-	      if( goodblock_ids[j]==fGoodBlocks.id[i] && fGoodBlocks.cid[i]==-1){
-		fGoodBlocks.cid[i]=Index;
-	      }
-	    }
 	  }
 
 	}
@@ -468,7 +458,7 @@ Int_t SBSCalorimeter::FindClusters()
 	  NSize--;
 	}	
       }
-      
+
       //std::cout << GetName() << " " << cluster->GetE() << " " << fEmin_clusTotal << std::endl;
 
       // Adding total cluster energy threshold
