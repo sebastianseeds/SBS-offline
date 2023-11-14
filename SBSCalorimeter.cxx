@@ -489,10 +489,6 @@ Int_t SBSCalorimeter::FindClusters()
     
   } //End loop on while( NSize != 0 ). Each iteration of this loop finds one cluster, as long as there are more clusters to find.
 
-  // std::string calorimeter = GetName();
-  // if(calorimeter.compare("hcal")==0)
-  //   std::cout << GetName() << " assigning goodblock cid:id " << std::endl;
-
   //NOW clustering is finished; we need to loop on fGoodBlocks and assign the cluster IDs;
   for( int iblk=0; iblk<fGoodBlocks.id.size(); iblk++ ){
     auto foundblock = clusterids_by_blockid.find( fGoodBlocks.id[iblk] );
@@ -500,12 +496,8 @@ Int_t SBSCalorimeter::FindClusters()
     if( foundblock != clusterids_by_blockid.end() ){
       fGoodBlocks.cid[iblk] = foundblock->second;
 
-      //if(calorimeter.compare("hcal")==0)
-      std::cout << "c" << GetName() << fGoodBlocks.id[iblk] << " ";
-
     }
   }
-  std::cout << std::endl << std::endl;
 
   //We want the "best" cluster to be the one with the largest total energy (in general)
 
@@ -637,21 +629,6 @@ Int_t SBSCalorimeter::FineProcess(TClonesArray& array)//tracks)
     }
   }
   
-  // std::string calorimeter = GetName();
-  // if(calorimeter.compare("hcal")==0){
-    
- 
-  //std::cout << std::endl << GetName() << " fMainclusblk.id: " << std::endl;
-  for( UInt_t b=0; b<fMainclusblk.id.size(); ++b )
-    std::cout << "fo" << GetName() << fMainclusblk.id[b] << " ";
-  //std::cout << std::endl << GetName() << " fGoodBlocks.id (fGoodBlocks.cid==" << fBestClusterIndex << "): " << std::endl;
-  for( UInt_t gb=0; gb<fGoodBlocks.id.size(); ++gb)
-    if( fGoodBlocks.cid[gb]==fBestClusterIndex )
-      std::cout << "fn" << GetName() << fGoodBlocks.id[gb] << " ";
-  std::cout << std::endl;
-
-    //}
-
   // store all the cluster info
   if(fDataOutputLevel>1) {
     // Now store the remaining clusters (up to fMaxNclus)
